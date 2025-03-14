@@ -1,0 +1,15 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:AtlasToolEditorAvalonia"
+        x:Class="AtlasToolEditorAvalonia.InputDialog"
+        x:DataType="local:InputDialog"
+        Title="{Binding DialogTitle}"
+        Width="300" Height="150"
+        Background="White">
+
+  <StackPanel Margin="10" Spacing="10">
+    <TextBlock Text="{Binding PromptText}" />
+    <TextBox Name="InputBox"/>
+    <Button Content="OK" HorizontalAlignment="Center" Click="Ok_Click"/>
+  </StackPanel>
+</Window>
