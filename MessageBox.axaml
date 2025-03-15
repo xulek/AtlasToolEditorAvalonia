@@ -1,11 +1,40 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="AtlasToolEditorAvalonia.MessageBox"
-        Width="300" Height="150"
+        Width="350" Height="180"
         WindowStartupLocation="CenterOwner"
+        Background="#F5F5F5"
         CanResize="False">
-  <StackPanel Margin="10" Spacing="10">
-    <TextBlock x:Name="MessageText" TextWrapping="Wrap"/>
-    <Button Content="OK" HorizontalAlignment="Center" Click="Ok_Click"/>
-  </StackPanel>
+        
+    <Window.Styles>
+        <Style Selector="Button">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="#333333"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="24,8"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="BorderBrush" Value="#DDDDDD"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        
+        <Style Selector="Button:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#0078D4"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="#333333"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+    </Window.Styles>
+
+    <Border Background="White" Margin="10" CornerRadius="6" BoxShadow="0 2 6 0 #15000000">
+        <Grid RowDefinitions="*,Auto" Margin="16">
+            <TextBlock Grid.Row="0" x:Name="MessageText" TextWrapping="Wrap" VerticalAlignment="Center"/>
+            
+            <Button Grid.Row="1" Content="OK" HorizontalAlignment="Center" 
+                    Background="#0078D4" Foreground="White" BorderThickness="0"
+                    Click="Ok_Click" Margin="0,16,0,0"/>
+        </Grid>
+    </Border>
 </Window>

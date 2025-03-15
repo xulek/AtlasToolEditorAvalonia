@@ -3,27 +3,139 @@
         xmlns:local="clr-namespace:AtlasToolEditorAvalonia"
         x:Class="AtlasToolEditorAvalonia.MainWindow"
         Title="Atlas Tool Editor"
-        Width="1280" Height="720">
-
-    <DockPanel>
-
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="10" Spacing="5">
-            <Button x:Name="OpenFolderButton" Content="Open folder with textures"/>
-            <Button x:Name="LoadImageButton" Content="Load Image"/>
-            <Button x:Name="SaveJsonButton" Content="Save JSON"/>
-            <Button x:Name="LoadJsonButton" Content="Load JSON"/>
-            <Button x:Name="ClearButton" Content="Clear"/>
-            <Button x:Name="ZoomInButton" Content="Zoom +"/>
-            <Button x:Name="ZoomOutButton" Content="Zoom -"/>
-            <Button x:Name="ArrangeButton" Content="Arrange"/>
-        </StackPanel>
-
-        <ScrollViewer DockPanel.Dock="Left" Width="200" VerticalScrollBarVisibility="Auto">
-            <ListBox x:Name="TexturesListBox" />
-        </ScrollViewer>
-
-        <local:AtlasCanvas x:Name="AtlasCanvasControl"
-                           HorizontalAlignment="Stretch"
-                           VerticalAlignment="Stretch"/>
-    </DockPanel>
+        Width="1280" Height="720"
+        Background="#F5F5F5"
+        TransparencyLevelHint="AcrylicBlur"
+        ExtendClientAreaToDecorationsHint="True">
+    
+    <Window.Styles>
+        <Style Selector="Button">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="#333333"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="BorderBrush" Value="#DDDDDD"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        
+        <Style Selector="Button:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#0078D4"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        
+        <Style Selector="ListBox">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="#333333"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="BorderBrush" Value="#DDDDDD"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        
+        <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="#0078D4"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+    </Window.Styles>
+    
+    <Grid Margin="0,32,0,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <Border Grid.Row="0" Background="#FFFFFF" BoxShadow="0 2 10 0 #15000000">
+            <Grid>
+                <StackPanel Orientation="Horizontal" Margin="12,12,12,12" Spacing="8">
+                    <Button x:Name="OpenFolderButton">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Data="M3 17V5a2 2 0 0 1 2-2h4l2 2h4a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" Width="16" Height="16"/>
+                            <TextBlock Text="Open Folder"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <Button x:Name="LoadImageButton">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Data="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7 M16 5h6v6 M8 21l16-16" Width="16" Height="16"/>
+                            <TextBlock Text="Load Image"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <Button x:Name="SaveJsonButton">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Data="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z M17 21v-8H7v8 M7 3v5h8" Width="16" Height="16"/>
+                            <TextBlock Text="Save JSON"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <Button x:Name="LoadJsonButton">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Data="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8" Width="16" Height="16"/>
+                            <TextBlock Text="Load JSON"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+                
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="12,12,12,12" Spacing="8">
+                    <Button x:Name="ClearButton">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Data="M3 6h18 M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2 M10 11v6 M14 11v6" Width="16" Height="16"/>
+                            <TextBlock Text="Clear"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <Button x:Name="ZoomInButton">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Data="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" Width="16" Height="16"/>
+                            <TextBlock Text="Zoom +"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <Button x:Name="ZoomOutButton">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Data="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" Width="16" Height="16"/>
+                            <TextBlock Text="Zoom -"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <Button x:Name="ArrangeButton" Background="#0078D4" Foreground="White" BorderThickness="0">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Data="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z M7.5 4.21l4.5 2.6l4.5-2.6 M7.5 19.79V14.6L3 12 M12 21.8V16.6 M16.5 19.79V14.6L21 12 M7.5 8.9L12 11.5l4.5-2.6 M16.5 8.9V4.21" Width="16" Height="16"/>
+                            <TextBlock Text="Arrange"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+        
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="240"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <Border Grid.Column="0" Background="#FFFFFF" Margin="12,12,6,12" CornerRadius="4" BoxShadow="0 2 6 0 #15000000">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <TextBlock Text="Textures" Margin="12,12,12,8" Foreground="#333333" FontWeight="SemiBold"/>
+                    
+                    <Border Grid.Row="1" BorderThickness="0,1,0,0" BorderBrush="#EEEEEE">
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <ListBox x:Name="TexturesListBox" Margin="6" BorderThickness="0"/>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </Border>
+            
+            <Border Grid.Column="1" Background="#FFFFFF" Margin="6,12,12,12" CornerRadius="4" BorderBrush="#DDDDDD" BorderThickness="1" BoxShadow="0 2 6 0 #15000000">
+                <local:AtlasCanvas x:Name="AtlasCanvasControl"
+                                   HorizontalAlignment="Stretch"
+                                   VerticalAlignment="Stretch"/>
+            </Border>
+        </Grid>
+    </Grid>
 </Window>
