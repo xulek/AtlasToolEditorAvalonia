@@ -10,5 +10,6 @@ namespace AtlasToolEditorAvalonia
         public Bitmap? Image { get; set; }
         public Rect Bounds { get; set; }
         public int Z { get; set; } = 0;
+        public override string ToString() => $"{Name} (Z: {Z})";
     }
 }

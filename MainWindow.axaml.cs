@@ -145,42 +145,29 @@ namespace AtlasToolEditorAvalonia
 
         private async Task LoadImageAsync()
         {
+            // Disable obsolete warning for OpenFileDialog
+#pragma warning disable CS0618
             var dialog = new OpenFileDialog();
             dialog.Filters = new List<FileDialogFilter>
-            {
-                new FileDialogFilter
-                {
-                    Name = "Images",
-                    Extensions = new List<string> { "png", "jpg", "jpeg", "bmp", "ozj", "ozt", "ozb", "ozd", "ozp" }
-                }
-            };
+    {
+        new FileDialogFilter { Name = "Images", Extensions = new List<string> { "png", "jpg", "jpeg", "bmp" } }
+    };
+#pragma warning restore CS0618
+
             var result = await dialog.ShowAsync(this);
             if (result != null && result.Length > 0)
             {
-                string filePath = result[0];
-                WriteableBitmap? bitmap = null;
-                var ext = Path.GetExtension(filePath).ToLowerInvariant();
-
-                if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp")
+                Bitmap bitmap;
+                // Create the bitmap outside the using block to ensure the stream is disposed after bitmap is fully loaded
+                using (var stream = File.OpenRead(result[0]))
                 {
-                    // Standard formats
-                    using (var stream = File.OpenRead(filePath))
-                    {
-                        bitmap = new Bitmap(stream) as WriteableBitmap;
-                    }
+                    // Create bitmap from stream
+                    bitmap = new Bitmap(stream);
                 }
-                else
-                {
-                    // Non-standard extensions
-                    var loader = new CustomImageLoader();
-                    bitmap = await loader.InitAsync(filePath);
-                }
-
-                if (bitmap != null)
-                {
-                    _atlasCanvas!.LoadedImage = bitmap;
-                    _atlasCanvas!.InvalidateVisual();
-                }
+                // Set the loaded image and force redraw of the AtlasCanvas
+                _atlasCanvas!.LoadedImage = bitmap;
+                _atlasCanvas!.InvalidateVisual();
+                _atlasCanvas!.Regions.Clear();
             }
         }
 

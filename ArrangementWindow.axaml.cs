@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media.Imaging;
 using System;
@@ -15,6 +16,7 @@ namespace AtlasToolEditorAvalonia
     {
         private Button? _loadArrangementButton, _saveArrangementButton, _undoButton;
         private ArrangementCanvas? _arrCanvas;
+        private ListBox? _textureList; // ListBox for vertical list of objects with Z parameter
         private Bitmap _fullImage;
         private List<RegionDefinition> _regionDefinitions;
         private Stack<List<UndoItem>> _undoStack = new Stack<List<UndoItem>>();
@@ -32,13 +34,14 @@ namespace AtlasToolEditorAvalonia
             _saveArrangementButton = this.FindControl<Button>("SaveArrangementButton");
             _undoButton = this.FindControl<Button>("UndoButton");
             _arrCanvas = this.FindControl<ArrangementCanvas>("ArrangementCanvasControl");
+            _textureList = this.FindControl<ListBox>("TextureList");
 
             if (_arrCanvas != null)
             {
                 _arrCanvas.Focusable = true;
                 _arrCanvas.Focus();
 
-                // Save the layout state when the left mouse button is pressed.
+                // Save state when left mouse button is pressed on canvas.
                 _arrCanvas.PointerPressed += (_, e) =>
                 {
                     if (e.GetCurrentPoint(_arrCanvas).Properties.IsLeftButtonPressed)
@@ -51,6 +54,13 @@ namespace AtlasToolEditorAvalonia
             _loadArrangementButton.Click += async (_, __) => await LoadArrangementAsync();
             _saveArrangementButton.Click += async (_, __) => await SaveArrangementAsync();
             _undoButton.Click += (_, __) => Undo();
+
+            // Subscribe to list events.
+            if (_textureList != null)
+            {
+                _textureList.SelectionChanged += TextureList_SelectionChanged;
+                _textureList.DoubleTapped += TextureList_DoubleTapped;
+            }
 
             InitializeItems();
         }
@@ -70,6 +80,7 @@ namespace AtlasToolEditorAvalonia
                 var cropped = new RenderTargetBitmap(new PixelSize(def.Width, def.Height), new Vector(96, 96));
                 using (var ctx = cropped.CreateDrawingContext())
                 {
+                    // Draw image part into the cropped bitmap.
                     ctx.DrawImage(
                         _fullImage,
                         new Rect(def.X, def.Y, def.Width, def.Height),
@@ -85,6 +96,7 @@ namespace AtlasToolEditorAvalonia
                 _arrCanvas.Items.Add(item);
             }
             _arrCanvas.InvalidateVisual();
+            RefreshTextureList();
         }
 
         private async Task LoadArrangementAsync()
@@ -99,11 +111,10 @@ namespace AtlasToolEditorAvalonia
             var jsonResult = await jsonDialog.ShowAsync(this);
             if (jsonResult == null || jsonResult.Length == 0)
                 return;
-            string jsonPath = jsonResult[0];
             List<ArrangedRegion>? arranged = null;
             try
             {
-                string json = File.ReadAllText(jsonPath);
+                string json = File.ReadAllText(jsonResult[0]);
                 arranged = JsonSerializer.Deserialize<List<ArrangedRegion>>(json);
             }
             catch (Exception ex)
@@ -126,6 +137,7 @@ namespace AtlasToolEditorAvalonia
                     }
                 }
                 _arrCanvas.InvalidateVisual();
+                RefreshTextureList();
             }
         }
 
@@ -215,6 +227,47 @@ namespace AtlasToolEditorAvalonia
                 }
             }
             _arrCanvas.InvalidateVisual();
+            RefreshTextureList();
+        }
+
+        // Refresh the vertical list showing TextureItem objects.
+        private void RefreshTextureList()
+        {
+            if (_textureList != null && _arrCanvas != null)
+            {
+                // Assign the list of TextureItem objects.
+                _textureList.ItemsSource = _arrCanvas.Items.ToList();
+            }
+        }
+
+        // Event handler for single click on list – selects the corresponding object.
+        private void TextureList_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+        {
+            if (_textureList?.SelectedItem is TextureItem selectedItem)
+            {
+                _arrCanvas?.SelectItem(selectedItem);
+            }
+        }
+
+        // Event handler for double click on list – opens dialog to change "Z" parameter.
+        private async void TextureList_DoubleTapped(object? sender, RoutedEventArgs e)
+        {
+            if (_textureList?.SelectedItem is TextureItem selectedItem)
+            {
+                var owner = TopLevel.GetTopLevel(this) as Window;
+                if (owner == null)
+                    return;
+                var dlg = new InputDialog("Change Z", "Enter new Z:");
+                var inputBox = dlg.FindControl<TextBox>("InputBox");
+                inputBox.Text = selectedItem.Z.ToString();
+                var result = await dlg.ShowDialog<string>(owner);
+                if (!string.IsNullOrEmpty(result) && int.TryParse(result, out int newZ))
+                {
+                    selectedItem.Z = newZ;
+                    _arrCanvas?.InvalidateVisual();
+                    RefreshTextureList();
+                }
+            }
         }
 
         private void InitializeComponent() => AvaloniaXamlLoader.Load(this);

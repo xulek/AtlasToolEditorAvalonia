@@ -13,7 +13,7 @@ namespace AtlasToolEditorAvalonia
 {
     public class ArrangementCanvas : Control
     {
-        // Adds a custom Background property to make the entire control hit-testable.
+        // Custom Background property for hit-testing.
         public static readonly StyledProperty<IBrush?> BackgroundProperty =
             AvaloniaProperty.Register<ArrangementCanvas, IBrush?>(nameof(Background));
 
@@ -48,14 +48,22 @@ namespace AtlasToolEditorAvalonia
             PointerMoved += OnPointerMoved;
             PointerReleased += OnPointerReleased;
             PointerWheelChanged += OnPointerWheelChanged;
-            DoubleTapped += OnDoubleTapped;
+            DoubleTapped += OnDoubleTapped; // Instead of Tapped
         }
 
+        // Public method to allow external selection via the list.
+        public void SelectItem(TextureItem item)
+        {
+            // Clear previous selection and add the specified item.
+            _selectedItems.Clear();
+            _selectedItems.Add(item);
+            InvalidateVisual();
+        }
 
         public override void Render(DrawingContext context)
         {
             base.Render(context);
-            // Fills the control's background.
+            // Fill the background of the control.
             context.FillRectangle(Background, new Rect(Bounds.Size));
 
             var matrix = Matrix.CreateScale(Zoom, Zoom) * Matrix.CreateTranslation(Pan.X, Pan.Y);
