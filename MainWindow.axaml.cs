@@ -1,8 +1,10 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media.Imaging;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,11 +13,22 @@ using System.Threading.Tasks;
 
 namespace AtlasToolEditorAvalonia
 {
+    public class DisplayedFile
+    {
+        public string FullPath { get; set; } = "";
+        public string FileName { get; set; } = "";
+        public override string ToString() => FileName;
+    }
+
     public partial class MainWindow : Window
     {
-        private Button? _loadImageButton, _saveJsonButton, _loadJsonButton, _clearButton, _zoomInButton, _zoomOutButton, _arrangeButton;
-        private AtlasCanvas? _atlasCanvas;
+        private Button? _loadImageButton, _saveJsonButton, _loadJsonButton,
+                       _clearButton, _zoomInButton, _zoomOutButton, _arrangeButton,
+                       _openFolderButton;    // New button
 
+        private ListBox? _texturesListBox;   // List of files from the folder
+
+        private AtlasCanvas? _atlasCanvas;
         private Bitmap? _loadedImage;
         private List<RegionDefinition> _regions = new List<RegionDefinition>();
 
@@ -25,6 +38,7 @@ namespace AtlasToolEditorAvalonia
 #if DEBUG
             this.AttachDevTools();
 #endif
+            // Initialization of existing buttons and the Canvas control:
             _loadImageButton = this.FindControl<Button>("LoadImageButton");
             _saveJsonButton = this.FindControl<Button>("SaveJsonButton");
             _loadJsonButton = this.FindControl<Button>("LoadJsonButton");
@@ -34,12 +48,30 @@ namespace AtlasToolEditorAvalonia
             _arrangeButton = this.FindControl<Button>("ArrangeButton");
             _atlasCanvas = this.FindControl<AtlasCanvas>("AtlasCanvasControl");
 
+            // New controls:
+            _openFolderButton = this.FindControl<Button>("OpenFolderButton");
+            _texturesListBox = this.FindControl<ListBox>("TexturesListBox");
+
+            // Event binding:
             _loadImageButton.Click += async (_, __) => await LoadImageAsync();
             _saveJsonButton.Click += async (_, __) => await SaveJsonAsync();
             _loadJsonButton.Click += async (_, __) => await LoadJsonAsync();
-            _clearButton.Click += (_, __) => { _atlasCanvas!.Regions.Clear(); _atlasCanvas!.InvalidateVisual(); };
-            _zoomInButton.Click += (_, __) => { _atlasCanvas!.Zoom *= 1.1; _atlasCanvas!.InvalidateVisual(); };
-            _zoomOutButton.Click += (_, __) => { _atlasCanvas!.Zoom *= 0.9; _atlasCanvas!.InvalidateVisual(); };
+
+            _clearButton.Click += (_, __) =>
+            {
+                _atlasCanvas!.Regions.Clear();
+                _atlasCanvas!.InvalidateVisual();
+            };
+            _zoomInButton.Click += (_, __) =>
+            {
+                _atlasCanvas!.Zoom *= 1.1;
+                _atlasCanvas!.InvalidateVisual();
+            };
+            _zoomOutButton.Click += (_, __) =>
+            {
+                _atlasCanvas!.Zoom *= 0.9;
+                _atlasCanvas!.InvalidateVisual();
+            };
             _arrangeButton.Click += (_, __) =>
             {
                 var image = _atlasCanvas?.LoadedImage;
@@ -54,6 +86,61 @@ namespace AtlasToolEditorAvalonia
                     MessageBox.Show(this, "Image or regions not loaded.", "Warning");
                 }
             };
+
+            // NEW: Handling the click of the open folder button
+            _openFolderButton.Click += async (_, __) => await OpenFolderAsync();
+
+            // NEW: Handling double-click in the file list
+            _texturesListBox.DoubleTapped += TexturesListBox_DoubleTapped;
+        }
+
+        private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
+
+        // Method opening a dialog box and collecting a list of files in the selected folder
+        private async Task OpenFolderAsync()
+        {
+            var folderDialog = new OpenFolderDialog();
+            var selectedFolder = await folderDialog.ShowAsync(this);
+            if (!string.IsNullOrEmpty(selectedFolder))
+            {
+                var supportedExtensions = new[] { ".png", ".jpg", ".jpeg", ".bmp", ".ozj", ".ozt", ".ozb", ".ozd", ".ozp" };
+
+                // We get all files with the selected extension.
+                var files = Directory.GetFiles(selectedFolder, "*.*", SearchOption.TopDirectoryOnly)
+                                     .Where(f => supportedExtensions.Contains(
+                                             Path.GetExtension(f).ToLowerInvariant()))
+                                     .ToList();
+
+                // We create a collection of DisplayedFile objects to display the short name
+                var displayedFiles = files.Select(path => new DisplayedFile
+                {
+                    FullPath = path,
+                    FileName = Path.GetFileName(path) // only the name with the extension
+                })
+                .ToList();
+
+                // We set ItemsSource to the DisplayedFile object collection
+                if (_texturesListBox != null)
+                {
+                    _texturesListBox.ItemsSource = displayedFiles;
+                }
+            }
+        }
+
+        private async void TexturesListBox_DoubleTapped(object? sender, RoutedEventArgs e)
+        {
+            if (_texturesListBox?.SelectedItem is DisplayedFile selectedFile)
+            {
+                // We use the full path to load the image
+                var loader = new CustomImageLoader();
+                var bitmap = await loader.InitAsync(selectedFile.FullPath);
+
+                if (_atlasCanvas != null && bitmap != null)
+                {
+                    _atlasCanvas.LoadedImage = bitmap;
+                    _atlasCanvas.InvalidateVisual();
+                }
+            }
         }
 
         private async Task LoadImageAsync()
@@ -61,7 +148,11 @@ namespace AtlasToolEditorAvalonia
             var dialog = new OpenFileDialog();
             dialog.Filters = new List<FileDialogFilter>
             {
-                new FileDialogFilter { Name = "Images", Extensions = new List<string> { "png", "jpg", "jpeg", "bmp", "ozj", "ozt", "ozb", "ozd", "ozp" } }
+                new FileDialogFilter
+                {
+                    Name = "Images",
+                    Extensions = new List<string> { "png", "jpg", "jpeg", "bmp", "ozj", "ozt", "ozb", "ozd", "ozp" }
+                }
             };
             var result = await dialog.ShowAsync(this);
             if (result != null && result.Length > 0)
@@ -72,15 +163,15 @@ namespace AtlasToolEditorAvalonia
 
                 if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp")
                 {
+                    // Standard formats
                     using (var stream = File.OpenRead(filePath))
                     {
-                        // Standardowe obrazy ładowane przy użyciu Avalonia Bitmap.
                         bitmap = new Bitmap(stream) as WriteableBitmap;
                     }
                 }
                 else
                 {
-                    // Niestandardowe rozszerzenia obsługujemy za pomocą CustomImageLoader.
+                    // Non-standard extensions
                     var loader = new CustomImageLoader();
                     bitmap = await loader.InitAsync(filePath);
                 }
@@ -147,7 +238,5 @@ namespace AtlasToolEditorAvalonia
                 _atlasCanvas!.DeleteSelectedRegion();
             }
         }
-
-        private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
     }
 }

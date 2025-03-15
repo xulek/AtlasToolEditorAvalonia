@@ -2,18 +2,28 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AtlasToolEditorAvalonia"
         x:Class="AtlasToolEditorAvalonia.MainWindow"
-        Title="Atlas Tool Editor" Width="800" Height="600"
-        KeyDown="Window_KeyDown">
-  <DockPanel>
-    <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="5" Spacing="5">
-      <Button x:Name="LoadImageButton" Content="Load Image"/>
-      <Button x:Name="SaveJsonButton" Content="Save JSON"/>
-      <Button x:Name="LoadJsonButton" Content="Load JSON"/>
-      <Button x:Name="ClearButton" Content="Clear"/>
-      <Button x:Name="ZoomInButton" Content="Zoom +"/>
-      <Button x:Name="ZoomOutButton" Content="Zoom -"/>
-      <Button x:Name="ArrangeButton" Content="Arrange"/>
-    </StackPanel>
-    <local:AtlasCanvas x:Name="AtlasCanvasControl" />
-  </DockPanel>
+        Title="Atlas Tool Editor"
+        Width="1280" Height="720">
+
+    <DockPanel>
+
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="10" Spacing="5">
+            <Button x:Name="OpenFolderButton" Content="Open folder with textures"/>
+            <Button x:Name="LoadImageButton" Content="Load Image"/>
+            <Button x:Name="SaveJsonButton" Content="Save JSON"/>
+            <Button x:Name="LoadJsonButton" Content="Load JSON"/>
+            <Button x:Name="ClearButton" Content="Clear"/>
+            <Button x:Name="ZoomInButton" Content="Zoom +"/>
+            <Button x:Name="ZoomOutButton" Content="Zoom -"/>
+            <Button x:Name="ArrangeButton" Content="Arrange"/>
+        </StackPanel>
+
+        <ScrollViewer DockPanel.Dock="Left" Width="200" VerticalScrollBarVisibility="Auto">
+            <ListBox x:Name="TexturesListBox" />
+        </ScrollViewer>
+
+        <local:AtlasCanvas x:Name="AtlasCanvasControl"
+                           HorizontalAlignment="Stretch"
+                           VerticalAlignment="Stretch"/>
+    </DockPanel>
 </Window>
