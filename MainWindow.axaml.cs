@@ -58,23 +58,38 @@ namespace AtlasToolEditorAvalonia
 
         private async Task LoadImageAsync()
         {
-#pragma warning disable CS0618
             var dialog = new OpenFileDialog();
             dialog.Filters = new List<FileDialogFilter>
             {
-                new FileDialogFilter { Name = "Images", Extensions = new List<string> { "png", "jpg", "jpeg", "bmp" } }
+                new FileDialogFilter { Name = "Images", Extensions = new List<string> { "png", "jpg", "jpeg", "bmp", "ozj", "ozt", "ozb", "ozd", "ozp" } }
             };
-#pragma warning restore CS0618
             var result = await dialog.ShowAsync(this);
             if (result != null && result.Length > 0)
             {
-                using (var stream = File.OpenRead(result[0]))
+                string filePath = result[0];
+                WriteableBitmap? bitmap = null;
+                var ext = Path.GetExtension(filePath).ToLowerInvariant();
+
+                if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp")
                 {
-                    var bitmap = new Bitmap(stream);
+                    using (var stream = File.OpenRead(filePath))
+                    {
+                        // Standardowe obrazy ładowane przy użyciu Avalonia Bitmap.
+                        bitmap = new Bitmap(stream) as WriteableBitmap;
+                    }
+                }
+                else
+                {
+                    // Niestandardowe rozszerzenia obsługujemy za pomocą CustomImageLoader.
+                    var loader = new CustomImageLoader();
+                    bitmap = await loader.InitAsync(filePath);
+                }
+
+                if (bitmap != null)
+                {
                     _atlasCanvas!.LoadedImage = bitmap;
                     _atlasCanvas!.InvalidateVisual();
                 }
-                _atlasCanvas!.Regions.Clear();
             }
         }
 
